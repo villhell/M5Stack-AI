@@ -3,7 +3,7 @@
 ConfigReader::ConfigReader(const char* filename) : filename(filename) {}
 
 bool ConfigReader::begin() {
-    if (!SD.begin()) {
+    if (!SD.begin(GPIO_NUM_4, SPI, 40000000)) {
         Serial.println("SD Card initialization failed!");
         return false;
     }

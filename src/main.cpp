@@ -31,6 +31,8 @@ GoogleSpeechAPI speechAPI;
 
 void setup() {
     auto cfg = M5.config();
+    cfg.external_spk = true;
+    cfg.external_spk_detail.omit_atomic_spk = true;
     M5.begin(cfg);
 
     M5.Lcd.setTextSize(2);
@@ -111,6 +113,7 @@ void setup() {
 
 void loop() {
     M5.update();
+    M5.Lcd.setCursor(0, 0);
     
     if (M5.Touch.getCount()) {
         M5.Lcd.clear();

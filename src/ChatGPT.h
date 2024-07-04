@@ -1,6 +1,7 @@
 #ifndef CHATGPT_H
 #define CHATGPT_H
 
+#include <Arduino.h>
 #include <HTTPClient.h>
 
 class ChatGPT {

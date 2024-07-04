@@ -1,13 +1,16 @@
 #ifndef AUDIO_INPUT_H
 #define AUDIO_INPUT_H
 
-#include <M5Core2.h>
+#include <Arduino.h>
+#include <M5Unified.h>
 
 class AudioInput {
 public:
-    AudioInput();
     void begin();
-    int16_t read();
+    String getAudioInput();
+
+private:
+    String encodeAudioToBase64(const int16_t* audioData, size_t dataLength);
 };
 
 #endif // AUDIO_INPUT_H

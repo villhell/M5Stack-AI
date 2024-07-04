@@ -1,10 +1,20 @@
 #include "GoogleSpeechAPI.h"
+#include <M5Unified.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
+#include <SD.h> 
 
 GoogleSpeechAPI::GoogleSpeechAPI() {}
 
 bool GoogleSpeechAPI::init(const char* credentials_file) {
-    if (!SD.begin()) {
+    if (!SD.begin(GPIO_NUM_4, SPI, 40000000)) {
         Serial.println("Failed to initialize SD card");
+        Serial.print("SD Card Type: ");
+        Serial.println(SD.cardType());
+        Serial.print("SD Card Size: ");
+        Serial.print(SD.cardSize() / (1024 * 1024));
+        Serial.println("MB");
         return false;
     }
 
@@ -25,7 +35,6 @@ bool GoogleSpeechAPI::init(const char* credentials_file) {
 
     api_key = doc["api_key"].as<String>();
 
-    M5.begin();
     return true;
 }
 
@@ -42,7 +51,7 @@ String GoogleSpeechAPI::recordAudio() {
     // Check if any non-zero samples were recorded
     bool hasNonZeroSamples = false;
     int16_t maxSample = 0;
-    for (int i = 0; i < bytesRead / 2; i++) {
+    for (int i = 0; i < bufferSize / 2; i++) {
         if (audioBuffer[i] != 0) {
             hasNonZeroSamples = true;
             if (abs(audioBuffer[i]) > maxSample) {
@@ -120,8 +129,10 @@ String GoogleSpeechAPI::recognizeSpeech() {
         return "Error: No audio data recorded";
     }
 
+    WiFiClientSecure client;
+    client.setInsecure();
+
     HTTPClient http;
-    client.setInsecure(); // SSL証明書の検証をスキップ
     http.begin(client, "https://speech.googleapis.com/v1/speech:recognize?key=" + api_key);
     http.addHeader("Content-Type", "application/json");
 
@@ -135,8 +146,8 @@ String GoogleSpeechAPI::recognizeSpeech() {
 
     if (httpResponseCode > 0) {
         response = http.getString();
-        Serial.println("Response code: " + String(httpResponseCode));
-        Serial.println("Response: " + response);
+        Serial.println("Google Speech-to-Text Response code: " + String(httpResponseCode));
+        Serial.println("Google Speech-to-Text Response: " + response);
         
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, response);
@@ -152,6 +163,7 @@ String GoogleSpeechAPI::recognizeSpeech() {
         }
         return "No transcription available. Response: " + response;
     } else {
+        Serial.println("Google Speech-to-Text Error: " + String(httpResponseCode));
         return "HTTP Error: " + String(httpResponseCode) + " - " + http.errorToString(httpResponseCode);
     }
 }
